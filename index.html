@@ -472,6 +472,12 @@
   <!-- ===== JAVASCRIPT ===== -->
   <script>
     // ============================================
+    // CONFIG DO WEBHOOK N8N
+    // Cole aqui a URL do seu webhook depois de importar o workflow
+    // ============================================
+    const WEBHOOK_URL = '';
+
+    // ============================================
     // CONFIG DOS STEPS
     // ============================================
     const STEPS_CONFIG = {
@@ -618,6 +624,18 @@
 
       const d = { empresa, email, nomePolitica, responsavel, cpf, rg, velocidade, horario, tanque, abastecimento, localizacao, localData, qtd, whatsapp, hoje };
       window._formData = d;
+
+      // Enviar lead para n8n (fire-and-forget, não bloqueia a geração)
+      if (WEBHOOK_URL) {
+        fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            data: hoje,
+            empresa, email, nomePolitica, responsavel, qtd, whatsapp
+          })
+        }).catch(() => {});
+      }
 
       const pdfHtml = buildPdfHtml(d);
       window._pdfHtml = pdfHtml;
@@ -818,14 +836,14 @@
   </div>
 </div>
 
-<script>window.onload = function(){ window.print(); }<\/script>
 </body></html>`;
     }
 
     function downloadPDF() {
       if (!window._pdfHtml) return;
+      const printHtml = window._pdfHtml.replace('</body>', '<script>window.onload=function(){window.print();}<\/script></body>');
       const win = window.open('', '_blank');
-      win.document.write(window._pdfHtml);
+      win.document.write(printHtml);
       win.document.close();
     }
 
