@@ -66,28 +66,6 @@
     .radio-option input[type="radio"] { margin-top:2px; accent-color: #8B23E5; flex-shrink:0; width:18px; height:18px; }
     .radio-option label { cursor:pointer; font-size:0.875rem; line-height:1.5; color:#374151; }
 
-    /* ===== PRINT / PDF ===== */
-    @media print {
-      body > *:not(#print-area) { display: none !important; }
-      #print-area {
-        display: block !important;
-        position: fixed; top:0; left:0; width:100%; height:100%;
-        background: white; z-index: 9999;
-        padding: 0; margin: 0;
-      }
-      #print-area .print-page {
-        padding: 2cm 2.5cm;
-        font-family: 'Times New Roman', Times, serif;
-        font-size: 12pt;
-        color: #000;
-        line-height: 1.7;
-      }
-      #print-area .print-title { text-align:center; font-size:16pt; font-weight:bold; margin-bottom:4pt; }
-      #print-area .print-subtitle { text-align:center; font-size:13pt; font-weight:bold; margin-bottom:24pt; }
-      #print-area .print-section-title { font-size:12pt; font-weight:bold; margin-top:18pt; margin-bottom:6pt; }
-      #print-area .print-divider { border:none; border-top:1px solid #000; margin:12pt 0; }
-      #print-area .no-print { display:none !important; }
-    }
     #print-area { display: none; }
   </style>
 </head>
@@ -445,7 +423,7 @@
           <i class="fa-solid fa-check text-green-500 text-2xl"></i>
         </div>
         <h2 class="text-2xl font-extrabold text-gray-900">Sua Política de Frota está pronta!</h2>
-        <p class="text-gray-500 mt-2 text-sm">Baixe em PDF, copie o texto ou baixe em TXT para usar imediatamente.</p>
+        <p class="text-gray-500 mt-2 text-sm">Visualize o documento abaixo e clique em <strong>Baixar PDF</strong> para salvar.</p>
       </div>
 
       <!-- Botões de ação -->
@@ -454,39 +432,21 @@
           class="inline-flex items-center gap-2 gradient-purple btn-glow text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg">
           <i class="fa-solid fa-file-pdf"></i> Baixar PDF
         </button>
-        <button onclick="downloadTXT()"
-          class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg">
-          <i class="fa-solid fa-download"></i> Baixar TXT
-        </button>
-        <button onclick="copyText()" id="btn-copy"
-          class="inline-flex items-center gap-2 border-2 border-purple-500 text-purple-500 font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:bg-purple-50 hover:scale-105">
-          <i class="fa-solid fa-copy"></i> Copiar Texto
-        </button>
         <button onclick="resetForm()"
           class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 font-semibold px-6 py-3 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300">
-          <i class="fa-solid fa-rotate-left"></i> Gerar Nova
+          <i class="fa-solid fa-rotate-left"></i> Gerar Nova Política
         </button>
       </div>
 
-      <!-- Card do documento -->
-      <div class="bg-white rounded-3xl card-purple overflow-hidden section-fade">
-        <div class="gradient-purple px-8 py-7 text-center">
-          <p class="text-purple-300 text-xs font-semibold uppercase tracking-widest mb-2">Contele Fleet</p>
-          <h2 class="text-white text-2xl font-extrabold">Política de Frota</h2>
-          <p id="doc-titulo-header" class="text-purple-200 text-sm mt-2 font-medium"></p>
-        </div>
-        <div id="policy-output" class="px-8 py-10 text-gray-700 leading-relaxed text-sm whitespace-pre-wrap font-mono"></div>
+      <!-- Preview do PDF -->
+      <div class="rounded-3xl overflow-hidden section-fade" style="border:1px solid rgba(139,35,229,0.3); box-shadow:0 0 40px rgba(139,35,229,0.08);">
+        <iframe id="pdf-frame" src="" style="width:100%; height:1100px; border:none; display:block;"></iframe>
       </div>
 
     </div>
   </section>
 
-  <!-- ===== ÁREA DE IMPRESSÃO (só aparece no print) ===== -->
-  <div id="print-area">
-    <div class="print-page">
-      <div id="print-content"></div>
-    </div>
-  </div>
+  <div id="print-area"></div>
 
   <!-- ===== FOOTER ===== -->
   <footer class="bg-grid py-12 px-4">
@@ -655,130 +615,17 @@
       const whatsapp      = document.getElementById('whatsapp').value.trim();
 
       const hoje = new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'long',year:'numeric'});
-      const titulo = `POLÍTICA DE FROTA ${nomePolitica}`;
 
-      // ── Texto gerado fiel ao modelo Modelo-de-Politica-Contele-Fleet.docx ──
-      const policyText = `${titulo}
+      const d = { empresa, email, nomePolitica, responsavel, cpf, rg, velocidade, horario, tanque, abastecimento, localizacao, localData, qtd, whatsapp, hoje };
+      window._formData = d;
 
-Responsável pela Frota: ${responsavel}
-CONDUTOR DO VEÍCULO:
-Data de criação: ${localData}
-Data da última revisão: ${hoje}
+      const pdfHtml = buildPdfHtml(d);
+      window._pdfHtml = pdfHtml;
 
-1. OBJETIVO
-
-Definir diretrizes, regras e procedimentos de utilização dos veículos da ${empresa} a um colaborador, para execução de atividades ligadas à empresa.
-
-2. CONDUTOR DO VEÍCULO
-
-São todos os colaboradores legalmente aptos a utilização dos veículos com fins de desempenho das atividades ligadas à empresa, e com a devida permissão do RESPONSÁVEL PELA FROTA.
-
-3. RESPONSÁVEL PELA FROTA
-
-São todos os colaboradores, incluindo o responsável pela frota, que trabalham com a administração de recursos humanos, materiais e financeiros, providenciando meios para a realização das atividades profissionais relacionadas à utilização dos veículos da empresa.
-
-3. RESPONSÁVEIS
-
-3.1. CONDUTOR DO VEÍCULO
-Ler regras disponíveis no presente documento, rubricando todas as páginas e assinando ao final;
-Obedecer todas as leis de trânsito vigentes, incluindo leis federais, estaduais e municipais;
-Manter a sua CNH em dia, devidamente regularizada, constando a licença EAR (Exerce Atividade Remunerada);
-Entregar semestralmente a certidão de pontos na CNH, que pode ser consultada no site do DETRAN do estado do condutor;
-Zelar pela conservação do veículo e do patrimônio da empresa.
-Ter a ciência de que o veículo é monitorado e rastreado, por uma questão de logística, proteção e segurança.
-
-3.2. RESPONSÁVEL PELA FROTA
-Garantir a assinatura do presente documento por parte do CONDUTOR DO VEÍCULO;
-Contratar e estabelecer parcerias com os fornecedores ligados aos recursos utilizados na frota de veículos, seguindo os procedimentos para tal;
-Controlar e gerenciar a manutenção dos veículos da empresa;
-Promover ações que busca estimular a direção mais segura, redução de custos e melhorias de produtividade;
-Garantir a regularidade dos veículos, relacionados a questões legais e obrigatoriedades da empresa;
-Garantir que o CONDUTOR DO VEÍCULO esteja com a CNH em dia e regularizada;
-Gerenciar os custos da frota, relacionados a combustível, multas, manutenções e tudo que envolva os veículos da empresa;
-Manter a política de frota atualizada.
-
-4. PROCEDIMENTOS PARA UTILIZAÇÃO DO VEÍCULO
-
-4.1 DAS DISPOSIÇÕES GERAIS:
-O colaborador deverá ter conhecimento da Legislação de Trânsito em vigor, sendo sujeito a penalidades legais em caso de descumprimento da lei.
-Entregar o veículo semanalmente para uma lavagem, recolhendo notas e comprovantes da realização e entregando para o RESPONSÁVEL PELA FROTA;
-A condução só poderá ser realizada pelo CONDUTOR DO VEÍCULO, não podendo ser repassado ou cedido a outros, salvo mediante expressa autorização da empresa;
-A utilização do veículo só poderá ser feita para atividades da empresa, sendo expressamente proibida a sua utilização para fins particulares, salvo mediante expressa autorização da empresa;
-As despesas ocorridas devido a utilização particular do veículo correrão por conta exclusiva do CONDUTOR DO VEÍCULO, incluindo indenizações de acidentes e multas de trânsito;
-O CONDUTOR DO VEÍCULO não está autorizado a permanecer com o veículo nos finais de semana, salvo mediante expressa autorização da empresa.
-Não é permitido fazer alterações nas características dos veículos, como a instalação de equipamentos, fixação de adesivos, etc.
-É de responsabilidade do CONDUTOR DO VEÍCULO cumprir a lei de jornada do motorista, e de responsabilidade do RESPONSÁVEL PELA FROTA a fiscalização.
-É de dever do colaborador fazer uma parada de 20 (vinte) a 30 (trinta) minutos, a cada 04 (quatro) horas de condução e/ou operação do veículo;
-
-4.2 DA UTILIZAÇÃO DO VEÍCULO
-É terminantemente proibida a utilização do veículo por terceiros não ligados a empresa;
-É terminantemente proibida a utilização do veículo para a concessão de carona;
-É terminantemente proibido utilizar aparelhos celulares para falar, ler ou escrever ao dirigir, exceto GPS conforme a lei vigente;
-É terminantemente proibido exceder a velocidade máxima de ${velocidade}km/h permitida pela legislação vigente em vias urbanas e rurais;
-Portar objetos que representam risco, como armas de fogo, explosivos, combustíveis e/ou materiais químicos ou inflamáveis;
-Transportar substâncias entorpecentes ou consideradas ilegais perante a lei;
-Utilizar o veículo em desacordo com o manual do veículo fornecido pelo fabricante;
-Fumar e/ou beber bebidas alcoólicas dentro do veículo;
-É terminantemente proibido dirigir após 12 (doze) horas de ter ingerido bebida alcoólica.
-Só é permitida a utilização do veículo ${localizacao};
-Os horários e dias permitidos para utilização do veículo são: ${horario}.
-
-4.3 DOS ABASTECIMENTOS
-O carro deve ser entregue sempre com ${tanque};
-${abastecimento}
-
-5. PROCEDIMENTO PARA MANUTENÇÕES E AUTUAÇÕES
-
-5.2 MANUTENÇÃO
-É de responsabilidade do colaborador CONDUTOR DO VEÍCULO realizar a inspeção de operação do veículo, vistoriando sempre: Calibragem de pneus; nível de óleo; nível de água; funcionamento de lanternas, entre outros itens solicitados pelo RESPONSÁVEL PELA FROTA;
-Cabe ao CONDUTOR DO VEÍCULO estar atento ao programa de revisão obrigatório determinada pelo fabricante;
-Quando for necessária a manutenção do veículo, é de responsabilidade do CONDUTOR DO VEÍCULO informar o RESPONSÁVEL PELA FROTA;
-As despesas de manutenção decorrentes do mau uso do veículo ou uso indevido, correrão por conta do CONDUTOR DO VEÍCULO.
-
-5.3 MULTAS
-As infrações recebidas devem ser entregues ao CONDUTOR DO VEÍCULO, para que fique ciente do valor a ser descontado em folha de pagamento;
-No recebimento de uma notificação no ato da multa, o CONDUTOR DO VEÍCULO se compromete a encaminhar a notificação preenchida e assinada para o RESPONSÁVEL PELA FROTA;
-A responsabilidade pelo ressarcimento de multas e infrações a lei de trânsito é do CONDUTOR DO VEÍCULO.
-É expressamente proibido fazer a identificação do condutor na multa utilizando-se de dados de terceiros, devendo ser feita obrigatoriamente com o nome do CONDUTOR DO VEÍCULO infrator;
-Se a CNH do CONDUTOR DO VEÍCULO for suspensa, o veículo concedido será recolhido pela empresa, até que a situação seja devidamente regularizada;
-O CONDUTOR DO VEÍCULO responde civil e criminalmente pelos atos praticados na condução do veículo cedidos
-Colaboradores reincidentes de multa são passíveis de advertência por escrito;
-
-5.6 SINISTROS
-Ao ocorrer avaria, acidente, furto ou roubo, é de responsabilidade do CONDUTOR DO VEÍCULO registrar Boletim de Ocorrência, acionando o RESPONSÁVEL PELA FROTA da empresa e, se solicitado pela empresa, a seguradora ou locadora do veículo.
-As despesas decorrentes de Sinistro (exceto multas e infrações), serão de responsabilidade da empresa, exceto casos nos casos de:
-Dolo (direto ou eventual), culpa (negligência, imperícia ou imprudência), por condução fora das leis e normas brasileiras;
-Ou no uso para fins particulares sem autorização do RESPONSÁVEL PELA FROTA.
-
-6. AUTORIZAÇÃO DE DESCONTO
-
-Em caso de eventuais multas de trânsito, que sob a responsabilidade do CONDUTOR DO VEÍCULO tenham sido cometidas, a assinatura do presente documento AUTORIZA, desde já, que a EMPRESA efetue os descontos correspondentes no contracheque do CONDUTOR DO VEÍCULO.
-Em caso de rescisão do contrato de trabalho, os eventuais valores devidos de infrações serão integralmente descontados, em uma única parcela, no Termo de Rescisão do Controle de Trabalho do Empregado.
-
-7. CONSIDERAÇÕES FINAIS
-
-As normas acima estabelecidas entram em vigor a partir da data de elaboração deste documento, podendo ser alteradas sem aviso prévio por parte do RESPONSÁVEL PELA FROTA;
-
-8. ASSINATURAS E DATAS
-
-${localData}
-
-_____________________________
-RESPONSÁVEL PELA FROTA
-CPF: ${cpf}
-RG: ${rg}
-
-_____________________________
-CONDUTOR DO VEÍCULO
-CPF:
-RG:`;
-
-      window._policyText  = policyText;
-      window._policyTitulo = titulo;
-      window._policyEmpresa = empresa;
-
-      document.getElementById('doc-titulo-header').textContent = titulo;
-      document.getElementById('policy-output').textContent = policyText;
+      if (window._prevBlobUrl) URL.revokeObjectURL(window._prevBlobUrl);
+      const blob = new Blob([pdfHtml], { type: 'text/html;charset=utf-8' });
+      window._prevBlobUrl = URL.createObjectURL(blob);
+      document.getElementById('pdf-frame').src = window._prevBlobUrl;
 
       document.getElementById('form').classList.add('hidden');
       const sec = document.getElementById('policy-section');
@@ -790,29 +637,196 @@ RG:`;
     // AÇÕES DO DOCUMENTO
     // ============================================
 
+    function buildPdfHtml(d) {
+      return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Política de Frota — ${d.empresa}</title>
+<style>
+  @page { size: A4; margin: 1.8cm 2cm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; line-height: 1.5; background: #fff; }
+
+  /* ── Tabela de cabeçalho ── */
+  table.header { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
+  table.header td { border: 1px solid #000; padding: 6pt 8pt; vertical-align: middle; }
+  .cell-logo { width: 58%; min-height: 52pt; font-size: 9pt; color: #777; font-style: italic; }
+  .cell-brand { width: 42%; text-align: center; padding: 8pt; }
+  .brand-co { font-size: 22pt; font-weight: 900; letter-spacing: -1.5pt; color: #222; }
+  .brand-o  { color: #7B2FBE; }
+  .brand-ntele { color: #222; }
+  .brand-fleet { display: inline-block; background: #7B2FBE; color: #fff; font-size: 7pt; font-weight: bold; letter-spacing: 2pt; padding: 1pt 5pt; border-radius: 2pt; margin-top: 2pt; }
+  .cell-title { text-align: center; font-weight: bold; font-size: 11pt; letter-spacing: 2pt; padding: 5pt; }
+  .cell-info { font-size: 9pt; padding: 5pt 8pt; vertical-align: top; }
+  .cell-info strong { display: block; margin-bottom: 2pt; }
+
+  /* ── Corpo ── */
+  .sec-title { font-weight: bold; font-size: 10pt; margin-top: 11pt; margin-bottom: 3pt; }
+  .sec-body  { font-size: 10pt; margin-bottom: 4pt; text-align: justify; }
+  .highlight { color: #c0392b; font-style: italic; font-weight: bold; }
+  ol.alpha   { padding-left: 20pt; margin: 3pt 0 5pt 0; }
+  ol.alpha li { font-size: 10pt; margin-bottom: 2pt; text-align: justify; }
+
+  /* ── Assinaturas ── */
+  .sig-wrap  { margin-top: 22pt; }
+  .sig-block { display: inline-block; width: 45%; margin-right: 5%; vertical-align: top; margin-top: 14pt; }
+  .sig-line  { border-top: 1px solid #000; margin-bottom: 3pt; }
+  .sig-name  { font-size: 9pt; font-weight: bold; }
+  .sig-info  { font-size: 9pt; }
+  .date-line { font-size: 10pt; margin-bottom: 8pt; }
+</style>
+</head>
+<body>
+
+<!-- CABEÇALHO -->
+<table class="header">
+  <tr>
+    <td class="cell-logo">[SEU LOGO AQUI]</td>
+    <td class="cell-brand">
+      <div><span class="brand-co">c<span class="brand-o">o</span>ntele</span></div>
+      <div><span class="brand-fleet">fleet</span></div>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="cell-title">POLÍTICA DE FROTA</td>
+  </tr>
+  <tr>
+    <td class="cell-info"><strong>Responsável pela Frota:</strong> ${d.responsavel}</td>
+    <td class="cell-info"><strong>CONDUTOR DO VEÍCULO:</strong><br/><br/>Data de criação: ${d.localData}<br/>Data da última revisão: ${d.hoje}</td>
+  </tr>
+</table>
+
+<!-- CORPO -->
+<div class="sec-title">1. OBJETIVO</div>
+<div class="sec-body">Definir diretrizes, regras e procedimentos de utilização dos veículos da <span class="highlight">${d.empresa}</span> a um colaborador, para execução de atividades ligadas à empresa.</div>
+
+<div class="sec-title">2. CONDUTOR DO VEÍCULO</div>
+<div class="sec-body">São todos os colaboradores legalmente aptos a utilização dos veículos com fins de desempenho das atividades ligadas à empresa, e com a devida permissão do RESPONSÁVEL PELA FROTA.</div>
+
+<div class="sec-title">3. RESPONSÁVEL PELA FROTA</div>
+<div class="sec-body">São todos os colaboradores, incluindo o responsável pela frota, que trabalham com a administração de recursos humanos, materiais e financeiros, providenciando meios para a realização das atividades profissionais relacionadas à utilização dos veículos da empresa.</div>
+
+<div class="sec-title">3. RESPONSÁVEIS</div>
+
+<div class="sec-title">3.1. CONDUTOR DO VEÍCULO</div>
+<ol class="alpha" type="a">
+  <li>Ler regras disponíveis no presente documento, rubricando todas as páginas e assinando ao final;</li>
+  <li>Obedecer todas as leis de trânsito vigentes, incluindo leis federais, estaduais e municipais;</li>
+  <li>Manter a sua CNH em dia, devidamente regularizada, constando a licença EAR (Exerce Atividade Remunerada);</li>
+  <li>Entregar semestralmente a certidão de pontos na CNH, que pode ser consultada no site do DETRAN do estado do condutor;</li>
+  <li>Zelar pela conservação do veículo e do patrimônio da empresa.</li>
+  <li>Ter a ciência de que o veículo é monitorado e rastreado, por uma questão de logística, proteção e segurança.</li>
+</ol>
+
+<div class="sec-title">3.2. RESPONSÁVEL PELA FROTA</div>
+<ol class="alpha" type="a">
+  <li>Garantir a assinatura do presente documento por parte do CONDUTOR DO VEÍCULO;</li>
+  <li>Contratar e estabelecer parcerias com os fornecedores ligados aos recursos utilizados na frota de veículos, seguindo os procedimentos para tal;</li>
+  <li>Controlar e gerenciar a manutenção dos veículos da empresa;</li>
+  <li>Promover ações que busca estimular a direção mais segura, redução de custos e melhorias de produtividade;</li>
+  <li>Garantir a regularidade dos veículos, relacionados a questões legais e obrigatoriedades da empresa;</li>
+  <li>Garantir que o CONDUTOR DO VEÍCULO esteja com a CNH em dia e regularizada;</li>
+  <li>Gerenciar os custos da frota, relacionados a combustível, multas, manutenções e tudo que envolva os veículos da empresa;</li>
+  <li>Manter a política de frota atualizada.</li>
+</ol>
+
+<div class="sec-title">4. PROCEDIMENTOS PARA UTILIZAÇÃO DO VEÍCULO</div>
+
+<div class="sec-title">4.1 DAS DISPOSIÇÕES GERAIS:</div>
+<ol class="alpha" type="a">
+  <li>O colaborador deverá ter conhecimento da Legislação de Trânsito em vigor, sendo sujeito a penalidades legais em caso de descumprimento da lei.</li>
+  <li>Entregar o veículo semanalmente para uma lavagem, recolhendo notas e comprovantes da realização e entregando para o RESPONSÁVEL PELA FROTA;</li>
+  <li>A condução só poderá ser realizada pelo CONDUTOR DO VEÍCULO, não podendo ser repassado ou cedido a outros, salvo mediante expressa autorização da empresa;</li>
+  <li>A utilização do veículo só poderá ser feita para atividades da empresa, sendo expressamente proibida a sua utilização para fins particulares, salvo mediante expressa autorização da empresa;</li>
+  <li>As despesas ocorridas devido a utilização particular do veículo correrão por conta exclusiva do CONDUTOR DO VEÍCULO, incluindo indenizações de acidentes e multas de trânsito;</li>
+  <li>O CONDUTOR DO VEÍCULO não está autorizado a permanecer com o veículo nos finais de semana, salvo mediante expressa autorização da empresa.</li>
+  <li>Não é permitido fazer alterações nas características dos veículos, como a instalação de equipamentos, fixação de adesivos, etc.</li>
+  <li>É de responsabilidade do CONDUTOR DO VEÍCULO cumprir a lei de jornada do motorista, e de responsabilidade do RESPONSÁVEL PELA FROTA a fiscalização.</li>
+  <li>É de dever do colaborador fazer uma parada de 20 (vinte) a 30 (trinta) minutos, a cada 04 (quatro) horas de condução e/ou operação do veículo;</li>
+  <li>Os horários e dias permitidos para utilização do veículo são: <strong>${d.horario}</strong>.</li>
+</ol>
+
+<div class="sec-title">4.2 DA UTILIZAÇÃO DO VEÍCULO</div>
+<ol class="alpha" type="a">
+  <li>É terminantemente proibida a utilização do veículo por terceiros não ligados a empresa;</li>
+  <li>É terminantemente proibida a utilização do veículo para a concessão de carona;</li>
+  <li>É terminantemente proibido utilizar aparelhos celulares para falar, ler ou escrever ao dirigir, exceto GPS conforme a lei vigente;</li>
+  <li>É terminantemente proibido exceder a velocidade máxima de <strong>${d.velocidade} km/h</strong> permitida pela legislação vigente em vias urbanas e rurais;</li>
+  <li>Portar objetos que representam risco, como armas de fogo, explosivos, combustíveis e/ou materiais químicos ou inflamáveis;</li>
+  <li>Transportar substâncias entorpecentes ou consideradas ilegais perante a lei;</li>
+  <li>Utilizar o veículo em desacordo com o manual do veículo fornecido pelo fabricante;</li>
+  <li>Fumar e/ou beber bebidas alcoólicas dentro do veículo;</li>
+  <li>É terminantemente proibido dirigir após 12 (doze) horas de ter ingerido bebida alcoólica.</li>
+  <li>Só é permitida a utilização do veículo <strong>${d.localizacao}</strong>.</li>
+</ol>
+
+<div class="sec-title">4.3 DOS ABASTECIMENTOS</div>
+<ol class="alpha" type="a">
+  <li>O carro deve ser entregue sempre com <strong>${d.tanque}</strong>;</li>
+  <li>${d.abastecimento}</li>
+</ol>
+
+<div class="sec-title">5. PROCEDIMENTO PARA MANUTENÇÕES E AUTUAÇÕES</div>
+
+<div class="sec-title">5.2 MANUTENÇÃO</div>
+<ol class="alpha" type="a">
+  <li>É de responsabilidade do colaborador CONDUTOR DO VEÍCULO realizar a inspeção de operação do veículo, vistoriando sempre: Calibragem de pneus; nível de óleo; nível de água; funcionamento de lanternas, entre outros itens solicitados pelo RESPONSÁVEL PELA FROTA;</li>
+  <li>Cabe ao CONDUTOR DO VEÍCULO estar atento ao programa de revisão obrigatório determinada pelo fabricante;</li>
+  <li>Quando for necessária a manutenção do veículo, é de responsabilidade do CONDUTOR DO VEÍCULO informar o RESPONSÁVEL PELA FROTA;</li>
+  <li>As despesas de manutenção decorrentes do mau uso do veículo ou uso indevido, correrão por conta do CONDUTOR DO VEÍCULO.</li>
+</ol>
+
+<div class="sec-title">5.3 MULTAS</div>
+<ol class="alpha" type="a">
+  <li>As infrações recebidas devem ser entregues ao CONDUTOR DO VEÍCULO, para que fique ciente do valor a ser descontado em folha de pagamento;</li>
+  <li>No recebimento de uma notificação no ato da multa, o CONDUTOR DO VEÍCULO se compromete a encaminhar a notificação preenchida e assinada para o RESPONSÁVEL PELA FROTA;</li>
+  <li>A responsabilidade pelo ressarcimento de multas e infrações a lei de trânsito é do CONDUTOR DO VEÍCULO.</li>
+  <li>É expressamente proibido fazer a identificação do condutor na multa utilizando-se de dados de terceiros, devendo ser feita obrigatoriamente com o nome do CONDUTOR DO VEÍCULO infrator;</li>
+  <li>Se a CNH do CONDUTOR DO VEÍCULO for suspensa, o veículo concedido será recolhido pela empresa, até que a situação seja devidamente regularizada;</li>
+  <li>O CONDUTOR DO VEÍCULO responde civil e criminalmente pelos atos praticados na condução do veículo cedidos;</li>
+  <li>Colaboradores reincidentes de multa são passíveis de advertência por escrito.</li>
+</ol>
+
+<div class="sec-title">5.6 SINISTROS</div>
+<ol class="alpha" type="a">
+  <li>Ao ocorrer avaria, acidente, furto ou roubo, é de responsabilidade do CONDUTOR DO VEÍCULO registrar Boletim de Ocorrência, acionando o RESPONSÁVEL PELA FROTA da empresa e, se solicitado pela empresa, a seguradora ou locadora do veículo.</li>
+  <li>As despesas decorrentes de Sinistro (exceto multas e infrações), serão de responsabilidade da empresa, exceto nos casos de: Dolo (direto ou eventual), culpa (negligência, imperícia ou imprudência), por condução fora das leis e normas brasileiras; ou no uso para fins particulares sem autorização do RESPONSÁVEL PELA FROTA.</li>
+</ol>
+
+<div class="sec-title">6. AUTORIZAÇÃO DE DESCONTO</div>
+<div class="sec-body">Em caso de eventuais multas de trânsito, que sob a responsabilidade do CONDUTOR DO VEÍCULO tenham sido cometidas, a assinatura do presente documento AUTORIZA, desde já, que a EMPRESA efetue os descontos correspondentes no contracheque do CONDUTOR DO VEÍCULO.</div>
+<div class="sec-body">Em caso de rescisão do contrato de trabalho, os eventuais valores devidos de infrações serão integralmente descontados, em uma única parcela, no Termo de Rescisão do Controle de Trabalho do Empregado.</div>
+
+<div class="sec-title">7. CONSIDERAÇÕES FINAIS</div>
+<div class="sec-body">As normas acima estabelecidas entram em vigor a partir da data de elaboração deste documento, podendo ser alteradas sem aviso prévio por parte do RESPONSÁVEL PELA FROTA.</div>
+
+<div class="sec-title">8. ASSINATURAS E DATAS</div>
+<div class="date-line" style="margin-top:8pt;">${d.localData}</div>
+<div class="sig-wrap">
+  <div class="sig-block">
+    <div class="sig-line"></div>
+    <div class="sig-name">RESPONSÁVEL PELA FROTA</div>
+    <div class="sig-info">CPF: ${d.cpf}</div>
+    <div class="sig-info">RG: ${d.rg}</div>
+  </div>
+  <div class="sig-block">
+    <div class="sig-line"></div>
+    <div class="sig-name">CONDUTOR DO VEÍCULO</div>
+    <div class="sig-info">CPF:</div>
+    <div class="sig-info">RG:</div>
+  </div>
+</div>
+
+<script>window.onload = function(){ window.print(); }<\/script>
+</body></html>`;
+    }
+
     function downloadPDF() {
-      if (!window._policyText) return;
-
-      // Prepara área de impressão
-      const printEl = document.getElementById('print-content');
-      const lines = window._policyText.split('\n');
-      let html = '';
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) { html += '<br/>'; return; }
-        if (trimmed.startsWith('POLÍTICA DE FROTA')) {
-          html += `<div class="print-title">POLÍTICA DE FROTA</div><div class="print-subtitle">${trimmed.replace('POLÍTICA DE FROTA','').trim()}</div>`;
-        } else if (/^[0-9]+\./.test(trimmed) && trimmed.length < 60) {
-          html += `<div class="print-section-title">${trimmed}</div>`;
-        } else if (trimmed.startsWith('━')) {
-          html += `<hr class="print-divider"/>`;
-        } else {
-          html += `<div>${trimmed}</div>`;
-        }
-      });
-      printEl.innerHTML = html;
-
-      window.print();
+      if (!window._pdfHtml) return;
+      const win = window.open('', '_blank');
+      win.document.write(window._pdfHtml);
+      win.document.close();
     }
 
     function downloadTXT() {
@@ -860,9 +874,10 @@ RG:`;
         document.getElementById(id).classList.add('hidden');
       });
       // Reset
-      window._policyText = null;
-      document.getElementById('policy-output').textContent = '';
-      document.getElementById('doc-titulo-header').textContent = '';
+      window._pdfHtml = null;
+      window._formData = null;
+      if (window._prevBlobUrl) { URL.revokeObjectURL(window._prevBlobUrl); window._prevBlobUrl = null; }
+      document.getElementById('pdf-frame').src = '';
       document.getElementById('policy-section').classList.add('hidden');
       document.getElementById('form').classList.remove('hidden');
       showStep(1);
