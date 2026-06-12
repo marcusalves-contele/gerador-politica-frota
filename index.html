@@ -472,10 +472,9 @@
   <!-- ===== JAVASCRIPT ===== -->
   <script>
     // ============================================
-    // CONFIG DO WEBHOOK N8N
-    // Cole aqui a URL do seu webhook depois de importar o workflow
+    // CONFIG RD STATION
     // ============================================
-    const WEBHOOK_URL = 'https://primary-production-2349.up.railway.app/webhook/f6fdedbc-19ba-4fc3-86e2-e570ffaf93d7';
+    const RD_API_KEY = 'aa36284ab8fe7a6454aa43ecd7a22704';
 
     // ============================================
     // CONFIG DOS STEPS
@@ -625,17 +624,22 @@
       const d = { empresa, email, nomePolitica, responsavel, cpf, rg, velocidade, horario, tanque, abastecimento, localizacao, localData, qtd, whatsapp, hoje };
       window._formData = d;
 
-      // Enviar lead para n8n (fire-and-forget, não bloqueia a geração)
-      if (WEBHOOK_URL) {
-        fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            data: hoje,
-            empresa, email, nomePolitica, responsavel, qtd, whatsapp
-          })
-        }).catch(() => {});
-      }
+      // Enviar lead direto para o RD Station (fire-and-forget)
+      fetch(`https://api.rd.services/platform/conversions?api_key=${RD_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'CONVERSION',
+          event_family: 'CDP',
+          payload: {
+            conversion_identifier: 'gv-gerador-politica-de-frota',
+            email: email,
+            name: responsavel,
+            company_name: empresa,
+            mobile_phone: whatsapp
+          }
+        })
+      }).catch(() => {});
 
       const pdfHtml = buildPdfHtml(d);
       window._pdfHtml = pdfHtml;
