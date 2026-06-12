@@ -471,10 +471,6 @@
 
   <!-- ===== JAVASCRIPT ===== -->
   <script>
-    // ============================================
-    // CONFIG RD STATION
-    // ============================================
-    const RD_API_KEY = 'aa36284ab8fe7a6454aa43ecd7a22704';
 
     // ============================================
     // CONFIG DOS STEPS
@@ -624,21 +620,11 @@
       const d = { empresa, email, nomePolitica, responsavel, cpf, rg, velocidade, horario, tanque, abastecimento, localizacao, localData, qtd, whatsapp, hoje };
       window._formData = d;
 
-      // Enviar lead direto para o RD Station (fire-and-forget)
-      fetch(`https://api.rd.services/platform/conversions?api_key=${RD_API_KEY}`, {
+      // Enviar lead para o servidor proxy (fire-and-forget)
+      fetch('/api/lead', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
-        body: JSON.stringify({
-          event_type: 'CONVERSION',
-          event_family: 'CDP',
-          payload: {
-            conversion_identifier: 'gv-gerador-politica-de-frota',
-            email: email,
-            name: responsavel,
-            company_name: empresa,
-            mobile_phone: whatsapp
-          }
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, responsavel, empresa, whatsapp })
       }).catch(() => {});
 
       const pdfHtml = buildPdfHtml(d);
