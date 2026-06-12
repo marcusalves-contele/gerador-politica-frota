@@ -627,7 +627,7 @@
         body: JSON.stringify({ email, responsavel, empresa, whatsapp })
       }).catch(() => {});
 
-      const pdfHtml = buildPdfHtml(d);
+      const pdfHtml = buildPdfHtml(d, window.location.origin);
       window._pdfHtml = pdfHtml;
 
       if (window._prevBlobUrl) URL.revokeObjectURL(window._prevBlobUrl);
@@ -645,7 +645,8 @@
     // AÇÕES DO DOCUMENTO
     // ============================================
 
-    function buildPdfHtml(d) {
+    function buildPdfHtml(d, baseUrl) {
+      baseUrl = baseUrl || window.location.origin;
       return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -660,11 +661,7 @@
   table.header { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
   table.header td { border: 1px solid #000; padding: 6pt 8pt; vertical-align: middle; }
   .cell-logo { width: 58%; min-height: 52pt; font-size: 9pt; color: #777; font-style: italic; }
-  .cell-brand { width: 42%; text-align: center; padding: 8pt; }
-  .brand-co { font-size: 22pt; font-weight: 900; letter-spacing: -1.5pt; color: #222; }
-  .brand-o  { color: #7B2FBE; }
-  .brand-ntele { color: #222; }
-  .brand-fleet { display: inline-block; background: #7B2FBE; color: #fff; font-size: 7pt; font-weight: bold; letter-spacing: 2pt; padding: 1pt 5pt; border-radius: 2pt; margin-top: 2pt; }
+  .cell-brand { width: 42%; text-align: center; padding: 8pt; vertical-align: middle; }
   .cell-title { text-align: center; font-weight: bold; font-size: 11pt; letter-spacing: 2pt; padding: 5pt; }
   .cell-info { font-size: 9pt; padding: 5pt 8pt; vertical-align: top; }
   .cell-info strong { display: block; margin-bottom: 2pt; }
@@ -692,8 +689,7 @@
   <tr>
     <td class="cell-logo">[SEU LOGO AQUI]</td>
     <td class="cell-brand">
-      <div><span class="brand-co">c<span class="brand-o">o</span>ntele</span></div>
-      <div><span class="brand-fleet">fleet</span></div>
+      <img src="${baseUrl}/logo-contele-fleet.png" style="max-width:130pt; max-height:55pt; object-fit:contain;" />
     </td>
   </tr>
   <tr>
