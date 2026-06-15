@@ -12,7 +12,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/html-to-docx@1.8.0/dist/html-to-docx.umd.js"></script>
 
   <script>
     tailwind.config = {
@@ -525,7 +524,7 @@
         </button>
         <button onclick="downloadDOCX()" id="btn-docx"
           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg">
-          <i class="fa-solid fa-file-word"></i> Baixar Word (.docx)
+          <i class="fa-solid fa-file-word"></i> Baixar Word (.doc)
         </button>
         <button onclick="downloadGoogleDocs()" id="btn-gdocs"
           class="inline-flex items-center gap-2 bg-white border-2 border-gray-200 hover:border-blue-400 text-gray-700 hover:text-blue-600 font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-sm">
@@ -541,7 +540,7 @@
       <div id="gdocs-toast" class="hidden mb-4 mx-auto max-w-lg bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-800 flex items-start gap-3 section-fade">
         <i class="fa-brands fa-google text-blue-500 mt-0.5 flex-shrink-0 text-lg"></i>
         <div>
-          <p class="font-semibold mb-1">Arquivo .docx baixado!</p>
+          <p class="font-semibold mb-1">Arquivo .doc baixado!</p>
           <p>Para editar no Google Docs: acesse <strong>drive.google.com</strong> → clique em <strong>+ Novo → Fazer upload de arquivo</strong> → selecione o arquivo baixado. O Google Drive converterá automaticamente para Google Docs.</p>
         </div>
         <button onclick="document.getElementById('gdocs-toast').classList.add('hidden')" class="ml-auto text-blue-400 hover:text-blue-600 flex-shrink-0">
@@ -777,9 +776,15 @@
 
     function buildPdfHtml(d, baseUrl) {
       baseUrl = baseUrl || window.location.origin;
-      const logoHtml = window._clientLogo
-        ? `<img src="${window._clientLogo}" style="max-width:160pt; max-height:52pt; object-fit:contain;" />`
+      const clientLogoSrc = window._clientLogo || null;
+      const clientW = window._clientLogoW || 160;
+      const clientH = window._clientLogoH || 52;
+      const logoHtml = clientLogoSrc
+        ? `<img src="${clientLogoSrc}" width="${clientW}" height="${clientH}" />`
         : '[SEU LOGO AQUI]';
+      const conteleLogoSrc = window._conteleLogo || `${baseUrl}/logo-contele-fleet.png`;
+      const conteleW = window._conteleLogoW || 173;
+      const conteleH = window._conteleLogoH || 73;
       return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -822,14 +827,14 @@
   <tr>
     <td class="cell-logo">${logoHtml}</td>
     <td class="cell-brand">
-      <img src="${baseUrl}/logo-contele-fleet.png" style="max-width:130pt; max-height:55pt; object-fit:contain;" />
+      <img src="${conteleLogoSrc}" width="${conteleW}" height="${conteleH}" style="width:${conteleW}px;height:${conteleH}px;" />
     </td>
   </tr>
   <tr>
     <td colspan="2" class="cell-title">POLÍTICA DE FROTA</td>
   </tr>
   <tr>
-    <td class="cell-info"><strong>Responsável pela Frota:</strong> ${d.responsavel}</td>
+    <td class="cell-info"><strong style="display:block;margin-bottom:2pt;">Responsável pela Frota:</strong>${d.responsavel}</td>
     <td class="cell-info"><strong>CONDUTOR DO VEÍCULO:</strong><br/><br/>Data de criação: ${d.localData}<br/>Data da última revisão: ${d.hoje}</td>
   </tr>
 </table>
@@ -965,46 +970,25 @@
     }
 
     // ============================================
-    // EXPORTAÇÃO WORD (.docx)
+    // EXPORTAÇÃO WORD (.doc — Word HTML format)
+    // Usa o mesmo HTML do PDF com namespaces do Word.
+    // O Word e LibreOffice renderizam o CSS preservando
+    // a formatação idêntica ao PDF.
     // ============================================
-    async function downloadDOCX() {
+    function downloadDOCX() {
       if (!window._pdfHtml) return;
-      const btn = document.getElementById('btn-docx');
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando...';
-      btn.disabled = true;
 
       const empresa = (window._formData?.empresa || 'empresa').normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9\s]/g, '')
         .replace(/\s+/g, '-').toLowerCase();
 
-      try {
-        if (typeof HTMLtoDOCX !== 'undefined') {
-          const blob = await HTMLtoDOCX(window._pdfHtml, null, {
-            table: { row: { cantSplit: true } },
-            footer: false,
-            pageNumber: false,
-          });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `politica-de-frota-${empresa}.docx`;
-          document.body.appendChild(a); a.click();
-          document.body.removeChild(a); URL.revokeObjectURL(url);
-        } else {
-          // Fallback: Word HTML format
-          _downloadWordHTML(empresa);
-        }
-      } catch (e) {
-        _downloadWordHTML(empresa);
-      }
+      const wordHtml = window._pdfHtml
+        .replace('<html lang="pt-BR">',
+          '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40" lang="pt-BR">')
+        .replace('</head>',
+          `<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
+</head>`);
 
-      btn.innerHTML = orig;
-      btn.disabled = false;
-    }
-
-    function _downloadWordHTML(empresa) {
-      const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">${window._pdfHtml.substring(window._pdfHtml.indexOf('<head'))}</html>`;
       const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1014,9 +998,9 @@
       document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    async function downloadGoogleDocs() {
+    function downloadGoogleDocs() {
       if (!window._pdfHtml) return;
-      await downloadDOCX();
+      downloadDOCX();
       const toast = document.getElementById('gdocs-toast');
       toast.classList.remove('hidden');
       toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1060,6 +1044,31 @@
     }
 
     // ============================================
+    // PRÉ-CARREGAMENTO DO LOGO CONTELE (base64 + dimensões)
+    // ============================================
+    (function preloadConteleLogo() {
+      const img = new Image();
+      img.onload = function() {
+        // Calcular dimensões que cabem em 130pt × 55pt mantendo proporção
+        // 1pt ≈ 1.333px @ 96dpi
+        const maxW = 130 * 1.333;
+        const maxH = 55 * 1.333;
+        const ratio = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+        window._conteleLogoW = Math.round(img.naturalWidth  * ratio);
+        window._conteleLogoH = Math.round(img.naturalHeight * ratio);
+        // Converter para base64
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        try { window._conteleLogo = canvas.toDataURL('image/png'); }
+        catch(e) { window._conteleLogo = img.src; }
+      };
+      img.onerror = () => {};
+      img.src = '/logo-contele-fleet.png';
+    })();
+
+    // ============================================
     // LOGO DO CLIENTE
     // ============================================
     document.getElementById('logo-upload').addEventListener('change', function(e) {
@@ -1067,9 +1076,32 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(event) {
-        window._clientLogo = event.target.result;
-        document.getElementById('logo-preview-img').src = event.target.result;
+        const original = event.target.result;
+        document.getElementById('logo-preview-img').src = original;
         document.getElementById('logo-preview').classList.remove('hidden');
+
+        // Redimensionar via Canvas para 160pt × 52pt (213 × 69px @ 96dpi)
+        // Assim o Word/LibreOffice renderiza no tamanho correto sem precisar de CSS
+        const img = new Image();
+        img.onload = function() {
+          const maxW = 213, maxH = 69;
+          const ratio = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+          const w = Math.round(img.naturalWidth  * ratio);
+          const h = Math.round(img.naturalHeight * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          try {
+            window._clientLogo = canvas.toDataURL('image/png');
+            window._clientLogoW = w;
+            window._clientLogoH = h;
+          } catch(err) {
+            window._clientLogo = original;
+            window._clientLogoW = 160;
+            window._clientLogoH = 52;
+          }
+        };
+        img.src = original;
       };
       reader.readAsDataURL(file);
     });
